@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSupabaseAuth } from "@/context/SuperbaseAuthContext";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogIn } from "lucide-react";
 import WalletButton from "./WalletButton";
 
 const Navbar: React.FC = () => {
@@ -87,13 +87,31 @@ const Navbar: React.FC = () => {
               </Link>
             )}
             <div className="ml-4">
-              <WalletButton />
+              {user ? (
+                <WalletButton />
+              ) : (
+                <Button asChild>
+                  <Link to="/login">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
 
           {/* Mobile menu button */}
           <div className="flex items-center md:hidden">
-            <WalletButton compact />
+            {user ? (
+              <WalletButton compact />
+            ) : (
+              <Button size="sm" asChild>
+                <Link to="/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </Link>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
