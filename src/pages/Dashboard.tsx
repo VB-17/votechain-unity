@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import PollCard, { Poll } from "@/components/PollCard";
 import VoteChart from "@/components/VoteChart";
-import { useAuth } from "@/context/AuthContext";
+import { useSupabaseAuth } from "@/context/SuperbaseAuthContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,12 +15,14 @@ import {
   Plus,
   ShieldCheck,
   User,
-  UserPlus,
   Vote,
 } from "lucide-react";
+import CollegeEmailVerification from "@/components/CollegeEmailVerification";
+import AdminRequestForm from "@/components/AdminRequestForm";
+import AdminRequestsDashboard from "@/components/AdminRequestsDashboard";
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useSupabaseAuth();
   const [myPolls, setMyPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +39,7 @@ const Dashboard: React.FC = () => {
           id: "user1",
           title: "Department Representative Election",
           description: "Vote for your preferred department representative",
-          creator: user.address,
+          creator: profile?.wallet_address || "",
           options: [
             { id: "opt1", text: "Candidate X", votes: 24 },
             { id: "opt2", text: "Candidate Y", votes: 18 },
@@ -45,13 +47,13 @@ const Dashboard: React.FC = () => {
           totalVotes: 42,
           createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
           endsAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-          isElection: user.isAdmin,
+          isElection: profile?.is_admin || false,
         },
         {
           id: "user2",
           title: "Preferred Study Location",
           description: "Where do you prefer to study on campus?",
-          creator: user.address,
+          creator: profile?.wallet_address || "",
           options: [
             { id: "opt1", text: "Library", votes: 35 },
             { id: "opt2", text: "Student Center", votes: 22 },
@@ -69,7 +71,7 @@ const Dashboard: React.FC = () => {
     };
 
     loadUserPolls();
-  }, [user]);
+  }, [user, profile]);
 
   if (!user) {
     return <Navigate to="/" replace />;
@@ -129,12 +131,12 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center">
-                  {user.isSuperAdmin ? (
+                  {profile?.is_super_admin ? (
                     <>
                       <ShieldCheck className="h-5 w-5 text-primary mr-2" />
                       <span className="text-lg font-medium">Super Admin</span>
                     </>
-                  ) : user.isAdmin ? (
+                  ) : profile?.is_admin ? (
                     <>
                       <CircleUser className="h-5 w-5 text-primary mr-2" />
                       <span className="text-lg font-medium">Admin</span>
@@ -152,13 +154,15 @@ const Dashboard: React.FC = () => {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Active Until
+                  College Verification
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center">
                   <Clock className="h-5 w-5 text-primary mr-2" />
-                  <span className="text-lg font-medium">No Expiry</span>
+                  <span className="text-lg font-medium">
+                    {profile?.college_verified ? 'Verified' : 'Not Verified'}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -167,7 +171,8 @@ const Dashboard: React.FC = () => {
           <Tabs defaultValue="polls" className="mb-8">
             <TabsList className="mb-6">
               <TabsTrigger value="polls">Your Polls</TabsTrigger>
-              {user.isSuperAdmin && (
+              <TabsTrigger value="verification">Verification</TabsTrigger>
+              {profile?.is_super_admin && (
                 <TabsTrigger value="admin">Admin Controls</TabsTrigger>
               )}
               <TabsTrigger value="account">Account</TabsTrigger>
@@ -220,38 +225,16 @@ const Dashboard: React.FC = () => {
               )}
             </TabsContent>
             
-            {user.isSuperAdmin && (
+            <TabsContent value="verification">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CollegeEmailVerification />
+                <AdminRequestForm />
+              </div>
+            </TabsContent>
+            
+            {profile?.is_super_admin && (
               <TabsContent value="admin">
-                <div className="border rounded-xl p-6">
-                  <h2 className="text-xl font-semibold mb-6">Admin Management</h2>
-                  
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">Admin Requests</h3>
-                      <div className="bg-muted/30 rounded-lg p-6 text-center">
-                        <p className="text-muted-foreground mb-4">
-                          No pending admin approval requests
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          When users request admin access, they will appear here for your approval
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">Current Admins</h3>
-                      <div className="bg-muted/30 rounded-lg p-6 text-center">
-                        <p className="text-muted-foreground mb-4">
-                          No admins have been appointed yet
-                        </p>
-                        <Button variant="outline">
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Manually Add Admin
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <AdminRequestsDashboard />
               </TabsContent>
             )}
             
@@ -264,18 +247,18 @@ const Dashboard: React.FC = () => {
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Wallet Address</p>
                       <p className="font-mono bg-muted p-2 rounded text-sm overflow-auto">
-                        {user.address}
+                        {profile?.wallet_address}
                       </p>
                     </div>
                     
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Account Type</p>
                       <div className="flex items-center">
-                        {user.isSuperAdmin ? (
+                        {profile?.is_super_admin ? (
                           <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
                             Super Admin
                           </span>
-                        ) : user.isAdmin ? (
+                        ) : profile?.is_admin ? (
                           <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
                             Admin
                           </span>
@@ -287,15 +270,6 @@ const Dashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-
-                  {!user.isAdmin && !user.isSuperAdmin && (
-                    <div className="pt-4">
-                      <Button variant="outline">
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Request Admin Access
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </div>
             </TabsContent>

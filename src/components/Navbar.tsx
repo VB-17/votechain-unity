@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useSupabaseAuth } from "@/context/SuperbaseAuthContext";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import WalletButton from "./WalletButton";
 
 const Navbar: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

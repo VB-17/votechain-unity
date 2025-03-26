@@ -9,7 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      admin_requests: {
+        Row: {
+          created_at: string | null
+          face_id: string | null
+          id: string
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string | null
+          face_id?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string | null
+          face_id?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          college_email: string | null
+          college_verified: boolean | null
+          created_at: string | null
+          id: string
+          is_admin: boolean | null
+          is_super_admin: boolean | null
+          updated_at: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          college_email?: string | null
+          college_verified?: boolean | null
+          created_at?: string | null
+          id: string
+          is_admin?: boolean | null
+          is_super_admin?: boolean | null
+          updated_at?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          college_email?: string | null
+          college_verified?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_admin?: boolean | null
+          is_super_admin?: boolean | null
+          updated_at?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
