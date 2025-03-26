@@ -1,9 +1,9 @@
 
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useSupabaseAuth } from "@/context/SuperbaseAuthContext";
 import { Button } from "@/components/ui/button";
-import { Wallet } from "lucide-react";
+import { Wallet, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 const Login: React.FC = () => {
@@ -56,6 +56,23 @@ const Login: React.FC = () => {
           >
             <Wallet className="mr-2 h-5 w-5" />
             Connect Wallet
+          </Button>
+          
+          <div className="flex items-center justify-center">
+            <span className="bg-muted h-px flex-1" />
+            <span className="px-4 text-xs text-muted-foreground">OR</span>
+            <span className="bg-muted h-px flex-1" />
+          </div>
+          
+          <Button 
+            variant="outline" 
+            className="w-full"
+            asChild
+          >
+            <Link to="/admin-signup">
+              <Shield className="mr-2 h-5 w-5" />
+              Admin Signup
+            </Link>
           </Button>
           
           <div className="text-center text-sm">
