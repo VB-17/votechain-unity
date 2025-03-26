@@ -16,10 +16,6 @@ type AdminRequest = {
   status: string;
   created_at: string;
   updated_at: string;
-  profile?: {
-    id: string;
-    wallet_address: string | null;
-  };
 };
 
 const AdminRequestsDashboard: React.FC = () => {
@@ -33,10 +29,7 @@ const AdminRequestsDashboard: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('admin_requests')
-        .select(`
-          *,
-          profile:profiles(id, wallet_address)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
