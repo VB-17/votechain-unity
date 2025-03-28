@@ -39,6 +39,83 @@ export type Database = {
         }
         Relationships: []
       }
+      candidates: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          id: string
+          name: string
+          photo_url: string | null
+          poll_id: string | null
+          position: string | null
+          verified: boolean | null
+          votes_count: number | null
+          wallet_address: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          photo_url?: string | null
+          poll_id?: string | null
+          position?: string | null
+          verified?: boolean | null
+          votes_count?: number | null
+          wallet_address?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          photo_url?: string | null
+          poll_id?: string | null
+          position?: string | null
+          verified?: boolean | null
+          votes_count?: number | null
+          wallet_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidates_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          created_at: string | null
+          creator: string
+          end_time: string
+          id: string
+          is_election: boolean | null
+          options: Json
+          question: string
+        }
+        Insert: {
+          created_at?: string | null
+          creator: string
+          end_time: string
+          id?: string
+          is_election?: boolean | null
+          options: Json
+          question: string
+        }
+        Update: {
+          created_at?: string | null
+          creator?: string
+          end_time?: string
+          id?: string
+          is_election?: boolean | null
+          options?: Json
+          question?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           college_email: string | null
@@ -71,6 +148,48 @@ export type Database = {
           wallet_address?: string | null
         }
         Relationships: []
+      }
+      votes: {
+        Row: {
+          candidate_id: string | null
+          created_at: string | null
+          id: string
+          poll_id: string | null
+          vote: string
+          voter: string
+        }
+        Insert: {
+          candidate_id?: string | null
+          created_at?: string | null
+          id?: string
+          poll_id?: string | null
+          vote: string
+          voter: string
+        }
+        Update: {
+          candidate_id?: string | null
+          created_at?: string | null
+          id?: string
+          poll_id?: string | null
+          vote?: string
+          voter?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
