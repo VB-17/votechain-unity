@@ -19,16 +19,7 @@ import {
   User, 
   Users
 } from "lucide-react";
-
-interface Candidate {
-  id: string;
-  name: string;
-  bio: string | null;
-  position: string | null;
-  photo_url: string | null;
-  verified: boolean;
-  votes_count: number;
-}
+import { Candidate } from "@/types/profile";
 
 const ElectionDetail = () => {
   const { id } = useParams();
@@ -214,7 +205,7 @@ const ElectionDetail = () => {
     title: election?.question || "",
     description: "",
     creator: election?.creator || "",
-    options: election?.options as PollOption[] || [],
+    options: election?.options as unknown as PollOption[] || [],
     totalVotes: candidates?.reduce((sum, c) => sum + (c.votes_count || 0), 0) || 0,
     createdAt: new Date(election?.created_at || ""),
     endsAt: new Date(election?.end_time || ""),
@@ -275,10 +266,20 @@ const ElectionDetail = () => {
                     candidates.map((candidate) => (
                       <CandidateCard 
                         key={candidate.id}
-                        candidate={candidate}
+                        candidate={{
+                          id: candidate.id,
+                          name: candidate.name,
+                          bio: candidate.bio,
+                          position: candidate.position,
+                          photoUrl: candidate.photo_url,
+                          verified: candidate.verified || false,
+                          votesCount: candidate.votes_count
+                        }}
+                        pollId={id || ""}
                         isSelected={selectedCandidate === candidate.id}
-                        onSelect={() => !hasVoted && setSelectedCandidate(candidate.id)}
-                        disabled={hasVoted || hasEnded}
+                        onVote={() => !hasVoted && setSelectedCandidate(candidate.id)}
+                        userVoted={hasVoted ? selectedCandidate : undefined}
+                        isElectionEnded={hasEnded}
                       />
                     ))
                   ) : (

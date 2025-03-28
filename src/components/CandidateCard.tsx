@@ -10,9 +10,9 @@ import { Vote, Check, X } from "lucide-react";
 interface Candidate {
   id: string;
   name: string;
-  position?: string;
-  bio?: string;
-  photoUrl?: string;
+  position?: string | null;
+  bio?: string | null;
+  photoUrl?: string | null;
   verified: boolean;
   votesCount: number;
 }
@@ -23,6 +23,7 @@ interface CandidateCardProps {
   onVote?: (candidateId: string) => void;
   userVoted?: string;
   isElectionEnded?: boolean;
+  isSelected?: boolean;
 }
 
 const CandidateCard: React.FC<CandidateCardProps> = ({
@@ -31,6 +32,7 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
   onVote,
   userVoted,
   isElectionEnded,
+  isSelected,
 }) => {
   const { user } = useSupabaseAuth();
   const hasVoted = !!userVoted;
@@ -46,7 +48,7 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
   };
 
   return (
-    <Card className="overflow-hidden h-full flex flex-col">
+    <Card className={`overflow-hidden h-full flex flex-col ${isSelected ? 'border-primary' : ''}`}>
       <CardHeader className="pb-0">
         <div className="flex items-center space-x-3">
           <Avatar className="h-16 w-16">
@@ -102,9 +104,19 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
             <Button 
               className="w-full"
               onClick={() => onVote && onVote(candidate.id)}
+              variant={isSelected ? "default" : "outline"}
             >
-              <Vote className="h-4 w-4 mr-2" />
-              Vote
+              {isSelected ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Selected
+                </>
+              ) : (
+                <>
+                  <Vote className="h-4 w-4 mr-2" />
+                  Select
+                </>
+              )}
             </Button>
           )
         ) : (
