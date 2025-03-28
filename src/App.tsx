@@ -13,6 +13,7 @@ import Polls from "./pages/Polls";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ElectionDetail from "./pages/ElectionDetail";
+import AdminElectionDetail from "./pages/AdminElectionDetail";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/polls" element={<Polls />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/elections/:id" element={<ElectionDetail />} />
+              <Route path="/admin/elections/:id" element={<AdminElectionDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
