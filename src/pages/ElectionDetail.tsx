@@ -29,6 +29,17 @@ interface Election {
   endTime: Date;
 }
 
+interface PollData {
+  id: string;
+  question: string;
+  description?: string;
+  creator: string;
+  created_at: string;
+  end_time: string;
+  is_election: boolean;
+  options: any;
+}
+
 const ElectionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -101,13 +112,16 @@ const ElectionDetail: React.FC = () => {
           return;
         }
 
+        // Type assertion to handle optional fields
+        const typedPollData = pollData as PollData;
+
         setElection({
-          id: pollData.id,
-          question: pollData.question,
-          description: pollData.description,
-          creator: pollData.creator,
-          createdAt: new Date(pollData.created_at),
-          endTime: new Date(pollData.end_time),
+          id: typedPollData.id,
+          question: typedPollData.question,
+          description: typedPollData.description,
+          creator: typedPollData.creator,
+          createdAt: new Date(typedPollData.created_at),
+          endTime: new Date(typedPollData.end_time),
         });
 
         // Fetch candidates

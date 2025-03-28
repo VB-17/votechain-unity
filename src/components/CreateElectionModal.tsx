@@ -120,7 +120,7 @@ const CreateElectionModal: React.FC<CreateElectionModalProps> = ({
 
     try {
       // 1. Create the election (poll) in Supabase
-      const pollData = {
+      const pollInput = {
         question: title,
         description: description || null,
         creator: user?.id || "unknown",
@@ -129,9 +129,9 @@ const CreateElectionModal: React.FC<CreateElectionModalProps> = ({
         options: JSON.stringify(candidates.map(c => ({ text: c.name })))
       };
 
-      const { data: pollData, error: pollError } = await supabase
+      const { data: createdPoll, error: pollError } = await supabase
         .from('polls')
-        .insert(pollData)
+        .insert(pollInput)
         .select('*')
         .single();
 
@@ -144,7 +144,7 @@ const CreateElectionModal: React.FC<CreateElectionModalProps> = ({
         name: candidate.name,
         bio: candidate.bio || null,
         position: candidate.position || null,
-        poll_id: pollData.id,
+        poll_id: createdPoll.id,
         wallet_address: null, // To be updated later if candidates register
         photo_url: null // To be updated later
       }));
@@ -159,10 +159,10 @@ const CreateElectionModal: React.FC<CreateElectionModalProps> = ({
 
       // 3. Create a Poll object for the frontend
       const newPoll: Poll = {
-        id: pollData.id,
-        title: pollData.question,
+        id: createdPoll.id,
+        title: createdPoll.question,
         description: description || undefined,
-        creator: pollData.creator,
+        creator: createdPoll.creator,
         options: candidates.map((c, i) => ({
           id: `c-${i}`,
           text: c.name,

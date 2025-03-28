@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import PollCard, { Poll } from "@/components/PollCard";
 import CreatePollModal from "@/components/CreatePollModal";
+import CreateElectionModal from "@/components/CreateElectionModal";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
-import { Plus, Filter } from "lucide-react";
+import { useSupabaseAuth } from "@/context/SuperbaseAuthContext";
+import { Plus, Filter, Vote } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +17,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Sample data for demonstration
 const MOCK_POLLS: Poll[] = [
@@ -82,24 +86,38 @@ const MOCK_POLLS: Poll[] = [
 ];
 
 const Polls: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useSupabaseAuth();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [filteredPolls, setFilteredPolls] = useState<Poll[]>([]);
   const [createPollOpen, setCreatePollOpen] = useState(false);
+  const [createElectionOpen, setCreateElectionOpen] = useState(false);
   const [filter, setFilter] = useState("all");
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     // Simulate loading polls from blockchain
     const loadPolls = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setPolls(MOCK_POLLS);
-      setFilteredPolls(MOCK_POLLS);
-      setLoaded(true);
+      try {
+        setLoaded(false);
+        // In a real implementation, this would fetch from Supabase
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setPolls(MOCK_POLLS);
+        setFilteredPolls(MOCK_POLLS);
+      } catch (error) {
+        console.error("Error loading polls:", error);
+        toast.error("Failed to load polls");
+      } finally {
+        setLoaded(true);
+      }
     };
 
     loadPolls();
   }, []);
+
+  useEffect(() => {
+    // Log authentication state for debugging
+    console.log("Auth state in Polls:", { user, profile });
+  }, [user, profile]);
 
   const handleCreatePoll = (newPoll: Poll) => {
     const updatedPolls = [newPoll, ...polls];
@@ -170,7 +188,7 @@ const Polls: React.FC = () => {
 
       <main className="flex-grow pt-24 pb-16">
         <div className="layout-container">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold mb-2">Explore Polls</h1>
               <p className="text-muted-foreground">
@@ -218,13 +236,24 @@ const Polls: React.FC = () => {
               </DropdownMenu>
 
               {user && (
-                <Button
-                  onClick={() => setCreatePollOpen(true)}
-                  className="whitespace-nowrap"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Poll
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="whitespace-nowrap">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>What do you want to create?</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioItem value="poll" onClick={() => setCreatePollOpen(true)}>
+                      Create a Poll
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="election" onClick={() => setCreateElectionOpen(true)}>
+                      Create an Election
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>
@@ -247,20 +276,34 @@ const Polls: React.FC = () => {
                   : "Be the first to create a poll!"}
               </p>
               {user && filter === "all" && (
-                <Button onClick={() => setCreatePollOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Poll
-                </Button>
+                <div className="flex space-x-4 justify-center">
+                  <Button onClick={() => setCreatePollOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Poll
+                  </Button>
+                  <Button onClick={() => setCreateElectionOpen(true)} variant="outline">
+                    <Vote className="h-4 w-4 mr-2" />
+                    Create Election
+                  </Button>
+                </div>
               )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
               {filteredPolls.map((poll) => (
-                <PollCard
-                  key={poll.id}
-                  poll={poll}
-                  onVote={handleVote}
-                />
+                <div key={poll.id}>
+                  {poll.isElection ? (
+                    <Link to={`/elections/${poll.id}`} className="block h-full">
+                      <PollCard poll={poll} compact />
+                    </Link>
+                  ) : (
+                    <PollCard
+                      key={poll.id}
+                      poll={poll}
+                      onVote={handleVote}
+                    />
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -271,6 +314,12 @@ const Polls: React.FC = () => {
         open={createPollOpen}
         onOpenChange={setCreatePollOpen}
         onPollCreated={handleCreatePoll}
+      />
+      
+      <CreateElectionModal
+        open={createElectionOpen}
+        onOpenChange={setCreateElectionOpen}
+        onElectionCreated={handleCreatePoll}
       />
     </div>
   );

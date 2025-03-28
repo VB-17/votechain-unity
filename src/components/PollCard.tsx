@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/context/AuthContext";
+import { useSupabaseAuth } from "@/context/SuperbaseAuthContext";
 import { toast } from "sonner";
 import { Clock, User, Users, Vote } from "lucide-react";
 
@@ -34,7 +33,7 @@ interface PollCardProps {
 }
 
 const PollCard: React.FC<PollCardProps> = ({ poll, onVote, compact = false }) => {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [selectedOption, setSelectedOption] = useState<string | null>(
     poll.userVoted || null
   );
@@ -70,12 +69,10 @@ const PollCard: React.FC<PollCardProps> = ({ poll, onVote, compact = false }) =>
     }
   };
 
-  // Format creator address
   const formatAddress = (address: string) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
-  // Calculate time remaining
   const getTimeRemaining = () => {
     if (!poll.endsAt) return "No end date";
     
@@ -96,7 +93,6 @@ const PollCard: React.FC<PollCardProps> = ({ poll, onVote, compact = false }) =>
     return `${minutes}m remaining`;
   };
 
-  // Get the percentage of votes for a particular option
   const getPercentage = (votes: number) => {
     if (poll.totalVotes === 0) return 0;
     return Math.round((votes / poll.totalVotes) * 100);
