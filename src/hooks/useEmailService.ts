@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import emailjs from 'emailjs-com';
+import { toast } from 'sonner';
 
 interface EmailParams {
   to_email?: string;
@@ -42,11 +43,13 @@ export const useEmailService = () => {
       );
 
       setLoading(false);
+      toast.success('Email sent successfully');
       return { success: true, response };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
       setLoading(false);
+      toast.error(`Failed to send email: ${errorMessage}`);
       return { success: false, error: errorMessage };
     }
   };
@@ -68,7 +71,11 @@ export const useEmailService = () => {
       message: JSON.stringify(voterDetails),
     };
 
-    return sendEmail(params, config);
+    const result = await sendEmail(params, config);
+    if (result.success) {
+      toast.success('Registration confirmation email sent successfully');
+    }
+    return result;
   };
 
   const sendOtpEmail = async (
@@ -85,7 +92,11 @@ export const useEmailService = () => {
       otp: otp,
     };
 
-    return sendEmail(params, config);
+    const result = await sendEmail(params, config);
+    if (result.success) {
+      toast.success('OTP sent to your email');
+    }
+    return result;
   };
 
   const sendVoteConfirmationEmail = async (
@@ -105,7 +116,11 @@ export const useEmailService = () => {
       timestamp: new Date().toLocaleString(),
     };
 
-    return sendEmail(params, config);
+    const result = await sendEmail(params, config);
+    if (result.success) {
+      toast.success('Vote confirmation email sent successfully');
+    }
+    return result;
   };
 
   return {
