@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useSupabaseAuth } from "@/context/SuperbaseAuthContext";
 import { toast } from "sonner";
 import { Clock, User, Users, Vote } from "lucide-react";
+import SecretHashModal from "@/components/SecretHashModal";
 
 export interface PollOption {
   id: string;
@@ -38,9 +40,10 @@ const PollCard: React.FC<PollCardProps> = ({ poll, onVote, compact = false }) =>
     poll.userVoted || null
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isHashModalOpen, setIsHashModalOpen] = useState(false);
   const hasVoted = Boolean(poll.userVoted);
 
-  const handleVote = async () => {
+  const initiateVote = () => {
     if (!user) {
       toast.error("Please connect your wallet to vote");
       return;
@@ -51,13 +54,23 @@ const PollCard: React.FC<PollCardProps> = ({ poll, onVote, compact = false }) =>
       return;
     }
 
+    // For elections, show the hash verification modal
+    if (poll.isElection) {
+      setIsHashModalOpen(true);
+    } else {
+      // For regular polls, proceed directly
+      handleVote();
+    }
+  };
+
+  const handleVote = async () => {
     setIsSubmitting(true);
     try {
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
       
       if (onVote) {
-        onVote(poll.id, selectedOption);
+        onVote(poll.id, selectedOption!);
       }
       
       toast.success("Your vote has been recorded");
@@ -99,108 +112,116 @@ const PollCard: React.FC<PollCardProps> = ({ poll, onVote, compact = false }) =>
   };
 
   return (
-    <Card className={`overflow-hidden transition-all duration-300 hover:shadow-soft ${compact ? 'h-full' : ''}`}>
-      <CardHeader className="pb-3">
-        {poll.isElection && (
-          <div className="flex justify-end mb-1">
-            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-              Election
-            </span>
-          </div>
-        )}
-        <CardTitle className="flex justify-between items-start">
-          <span className="mr-4">{poll.title}</span>
-        </CardTitle>
-        {poll.description && !compact && (
-          <p className="text-sm text-muted-foreground mt-2">{poll.description}</p>
-        )}
-        <div className="flex justify-between items-center text-xs text-muted-foreground mt-2">
-          <div className="flex items-center">
-            <User className="h-3 w-3 mr-1" />
-            <span>{formatAddress(poll.creator)}</span>
-          </div>
-          {poll.endsAt && (
-            <div className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              <span>{getTimeRemaining()}</span>
+    <>
+      <Card className={`overflow-hidden transition-all duration-300 hover:shadow-soft ${compact ? 'h-full' : ''}`}>
+        <CardHeader className="pb-3">
+          {poll.isElection && (
+            <div className="flex justify-end mb-1">
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                Election
+              </span>
             </div>
           )}
-        </div>
-      </CardHeader>
-      <CardContent className={compact ? "pb-0" : ""}>
-        {hasVoted || !user ? (
-          <div className="space-y-3">
-            {poll.options.map((option) => (
-              <div key={option.id} className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className={option.id === poll.userVoted ? "font-medium" : ""}>
-                    {option.text}
-                  </span>
-                  <span className="font-medium">{getPercentage(option.votes)}%</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${
-                      option.id === poll.userVoted
-                        ? "bg-primary"
-                        : "bg-primary/40"
-                    }`}
-                    style={{ width: `${getPercentage(option.votes)}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
-            <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
-              <div className="flex items-center">
-                <Users className="h-3 w-3 mr-1" />
-                <span>{poll.totalVotes} votes</span>
-              </div>
-              {hasVoted && (
-                <span className="text-primary">You voted</span>
-              )}
+          <CardTitle className="flex justify-between items-start">
+            <span className="mr-4">{poll.title}</span>
+          </CardTitle>
+          {poll.description && !compact && (
+            <p className="text-sm text-muted-foreground mt-2">{poll.description}</p>
+          )}
+          <div className="flex justify-between items-center text-xs text-muted-foreground mt-2">
+            <div className="flex items-center">
+              <User className="h-3 w-3 mr-1" />
+              <span>{formatAddress(poll.creator)}</span>
             </div>
-          </div>
-        ) : (
-          <RadioGroup
-            value={selectedOption || ""}
-            onValueChange={setSelectedOption}
-            className="space-y-3"
-          >
-            {poll.options.map((option) => (
-              <div
-                key={option.id}
-                className="flex items-center space-x-2 border rounded-md p-3 transition-colors hover:bg-muted/50"
-              >
-                <RadioGroupItem value={option.id} id={option.id} />
-                <Label htmlFor={option.id} className="flex-grow cursor-pointer">
-                  {option.text}
-                </Label>
+            {poll.endsAt && (
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>{getTimeRemaining()}</span>
               </div>
-            ))}
-          </RadioGroup>
-        )}
-      </CardContent>
-      <CardFooter className={`${compact ? "pt-3" : "pt-6"}`}>
-        {user && !hasVoted ? (
-          <Button
-            onClick={handleVote}
-            disabled={!selectedOption || isSubmitting}
-            className="w-full"
-          >
-            {isSubmitting ? "Recording Vote..." : "Vote Now"}
-            {!isSubmitting && <Vote className="ml-2 h-4 w-4" />}
-          </Button>
-        ) : !user ? (
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => toast.error("Please connect your wallet to vote")}
-          >
-            Connect wallet to vote
-          </Button>
-        ) : null}
-      </CardFooter>
-    </Card>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className={compact ? "pb-0" : ""}>
+          {hasVoted || !user ? (
+            <div className="space-y-3">
+              {poll.options.map((option) => (
+                <div key={option.id} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className={option.id === poll.userVoted ? "font-medium" : ""}>
+                      {option.text}
+                    </span>
+                    <span className="font-medium">{getPercentage(option.votes)}%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${
+                        option.id === poll.userVoted
+                          ? "bg-primary"
+                          : "bg-primary/40"
+                      }`}
+                      style={{ width: `${getPercentage(option.votes)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center">
+                  <Users className="h-3 w-3 mr-1" />
+                  <span>{poll.totalVotes} votes</span>
+                </div>
+                {hasVoted && (
+                  <span className="text-primary">You voted</span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <RadioGroup
+              value={selectedOption || ""}
+              onValueChange={setSelectedOption}
+              className="space-y-3"
+            >
+              {poll.options.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center space-x-2 border rounded-md p-3 transition-colors hover:bg-muted/50"
+                >
+                  <RadioGroupItem value={option.id} id={option.id} />
+                  <Label htmlFor={option.id} className="flex-grow cursor-pointer">
+                    {option.text}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          )}
+        </CardContent>
+        <CardFooter className={`${compact ? "pt-3" : "pt-6"}`}>
+          {user && !hasVoted ? (
+            <Button
+              onClick={initiateVote}
+              disabled={!selectedOption || isSubmitting}
+              className="w-full"
+            >
+              {isSubmitting ? "Recording Vote..." : "Vote Now"}
+              {!isSubmitting && <Vote className="ml-2 h-4 w-4" />}
+            </Button>
+          ) : !user ? (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => toast.error("Please connect your wallet to vote")}
+            >
+              Connect wallet to vote
+            </Button>
+          ) : null}
+        </CardFooter>
+      </Card>
+
+      <SecretHashModal 
+        open={isHashModalOpen}
+        onOpenChange={setIsHashModalOpen}
+        onVerify={handleVote}
+      />
+    </>
   );
 };
 
