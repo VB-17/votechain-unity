@@ -16,9 +16,7 @@ import {
   CartesianGrid 
 } from "recharts";
 import { 
-  ChartContainer, 
-  ChartTooltip, 
-  ChartTooltipContent 
+  ChartContainer
 } from "@/components/ui/chart";
 import { 
   Card, 
@@ -276,13 +274,8 @@ const ElectionResults = () => {
                         height={70}
                       />
                       <YAxis />
-                      <ChartTooltip 
-                        content={(props) => (
-                          <ChartTooltipContent 
-                            {...props} 
-                            formatter={(value: number) => [`${value} votes`, "Votes"]}
-                          />
-                        )}
+                      <Tooltip 
+                        formatter={(value: number) => [`${value} votes`, "Votes"]}
                       />
                       <Bar dataKey="votes" name="Votes" fill="var(--color-votes)" />
                     </BarChart>
