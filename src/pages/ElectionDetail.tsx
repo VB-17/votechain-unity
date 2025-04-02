@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSupabaseAuth } from "@/context/SuperbaseAuthContext";
@@ -26,7 +25,8 @@ import {
   Calendar, 
   ChevronLeft, 
   User, 
-  Users
+  Users,
+  BarChart
 } from "lucide-react";
 
 const ElectionDetail = () => {
@@ -37,7 +37,6 @@ const ElectionDetail = () => {
   const [hasVoted, setHasVoted] = useState(false);
   const [userVote, setUserVote] = useState<string | null>(null);
   
-  // Fetch election details
   const { data: election, isLoading: electionLoading } = useQuery({
     queryKey: ["election", id],
     queryFn: async () => {
@@ -55,7 +54,6 @@ const ElectionDetail = () => {
     enabled: !!id,
   });
   
-  // Fetch candidates
   const { data: candidates = [], isLoading: candidatesLoading } = useQuery({
     queryKey: ["candidates", id],
     queryFn: async () => {
@@ -73,7 +71,6 @@ const ElectionDetail = () => {
     enabled: !!id,
   });
   
-  // Check if user has already voted
   useEffect(() => {
     const checkUserVote = async () => {
       if (!id || !user || !profile?.wallet_address) return;
@@ -87,7 +84,7 @@ const ElectionDetail = () => {
           .single();
           
         if (error) {
-          if (error.code !== "PGRST116") { // PGRST116 means no rows returned
+          if (error.code !== "PGRST116") {
             console.error("Error checking vote:", error);
           }
           return;
@@ -127,7 +124,6 @@ const ElectionDetail = () => {
     try {
       setIsVoting(true);
       
-      // Record the vote
       const { error: voteError } = await supabase
         .from("votes")
         .insert({
@@ -139,7 +135,6 @@ const ElectionDetail = () => {
         
       if (voteError) throw voteError;
       
-      // Increment the candidate's vote count using the edge function
       const { error: incrementError } = await supabase.functions.invoke(
         "increment_candidate_votes",
         {
@@ -161,7 +156,6 @@ const ElectionDetail = () => {
     }
   };
   
-  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
@@ -173,7 +167,6 @@ const ElectionDetail = () => {
     }).format(date);
   };
   
-  // Prepare data for the chart
   const pollData = {
     id: election?.id || "",
     title: election?.question || "",
@@ -257,6 +250,18 @@ const ElectionDetail = () => {
                     </span>
                   </div>
                 </CardDescription>
+                
+                {hasEnded && (
+                  <div className="mt-4">
+                    <Link 
+                      to={`/elections/${id}/results`}
+                      className={buttonVariants({ variant: "outline", size: "sm" })}
+                    >
+                      <BarChart className="mr-2 h-4 w-4" />
+                      View Detailed Results
+                    </Link>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
